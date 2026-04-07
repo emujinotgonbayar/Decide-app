@@ -364,7 +364,7 @@ header { padding: 48px 0 32px; border-bottom: 2px solid var(--ink); margin-botto
 
   <!-- TODAY'S DECISION -->
   <div class="today-section">
-    <div class="section-label">Today's Decision</div>
+    <div class="section-label">Current Decision</div>
 
     <!-- IDLE: waiting to roll -->
     <div class="idle-card" id="idleCard">
@@ -405,6 +405,7 @@ header { padding: 48px 0 32px; border-bottom: 2px solid var(--ink); margin-botto
       <div class="locked-question" id="lockedQuestion"></div>
       <div class="locked-answer" id="lockedAnswer"></div>
       <div class="locked-time" id="lockedTime"></div>
+      <button class="retry-btn" style="margin-top:20px;border-color:var(--green);color:var(--green);" onclick="showState('idle')">PICK ANOTHER →</button>
     </div>
 
     <!-- TIMEOUT: ran out of time -->
@@ -451,7 +452,7 @@ header { padding: 48px 0 32px; border-bottom: 2px solid var(--ink); margin-botto
 function loadState() {
   const raw = localStorage.getItem('decide_v1');
   if (raw) return JSON.parse(raw);
-  return { queue: [], archive: [], todayDecision: null, todayDate: null };
+  return { queue: [], archive: [] };
 }
 function save() { localStorage.setItem('decide_v1', JSON.stringify(state)); }
 
@@ -529,12 +530,6 @@ function renderArchive() {
 
 // ── IDLE STATE ──
 function renderIdle() {
-  const today = todayStr();
-  // if already decided today, show locked/timeout
-  if (state.todayDate === today && state.todayDecision) {
-    const rec = state.archive.find(a => a.id === state.todayDecision);
-    if (rec) { showLocked(rec); return; }
-  }
   showState('idle');
 }
 
@@ -625,8 +620,6 @@ function saveDecision(decision, answer, seconds) {
     date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})
   };
   state.archive.push(rec);
-  state.todayDate = todayStr();
-  state.todayDecision = rec.id;
   // remove from queue if answered
   if (answer) state.queue = state.queue.filter(d => d.id !== decision.id);
   save();
