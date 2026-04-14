@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decide. — No Take-Backs</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f0e8;
+  --bg2: #ede8df;
+  --card: #ffffff;
+  --ink: #1a1612;
+  --ink2: #3d3830;
+  --muted: #9a9080;
+  --red: #c0392b;
+  --red2: #e74c3c;
+  --green: #27ae60;
+  --amber: #e67e22;
+  --border: #d4cfc5;
+  --shadow: rgba(26,22,18,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Paper texture overlay */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0; opacity: 0.4;
+}
+
+.app { position: relative; z-index: 1; max-width: 580px; margin: 0 auto; padding: 0 20px 80px; }
+
+/* ── HEADER ── */
+header { padding: 48px 0 32px; border-bottom: 2px solid var(--ink); margin-bottom: 40px; }
+.title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 72px; line-height: 0.9;
+  letter-spacing: 2px;
+  color: var(--ink);
+}
+.title span { color: var(--red); }
+.tagline {
+  font-size: 13px; font-weight: 300; font-style: italic;
+  color: var(--muted); margin-top: 8px; letter-spacing: 1px;
+}
+
+/* ── TODAY'S DECISION ── */
+.today-section { margin-bottom: 48px; }
+
+.section-label {
+  font-size: 10px; font-weight: 500; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-label::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+/* IDLE STATE — no decision yet */
+.idle-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 40px 32px;
+  text-align: center;
+  box-shadow: 0 2px 12px var(--shadow);
+}
+.idle-time {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 56px; color: var(--ink);
+  letter-spacing: 2px; line-height: 1;
+  margin-bottom: 4px;
+}
+.idle-date { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+.roll-btn {
+  background: var(--ink);
+  color: var(--bg);
+  border: none; border-radius: 3px;
+  padding: 16px 40px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px; letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: inline-block;
+}
+.roll-btn:hover { background: var(--red); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(192,57,43,0.3); }
+.roll-btn:active { transform: translateY(0); }
+.idle-sub { font-size: 12px; color: var(--muted); margin-top: 12px; font-style: italic; }
+
+/* ACTIVE DECISION */
+.decision-card {
+  background: var(--card);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 6px 6px 0 var(--ink);
+  display: none;
+}
+.decision-card.show { display: block; }
+
+.decision-top {
+  background: var(--ink);
+  padding: 12px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.decision-top-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px; letter-spacing: 3px;
+  color: var(--bg); opacity: 0.7;
+}
+.decision-number {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px; letter-spacing: 2px;
+  color: var(--bg); opacity: 0.5;
+}
+
+.decision-body { padding: 32px; }
+.decision-text {
+  font-size: 26px; font-weight: 300; line-height: 1.3;
+  color: var(--ink); margin-bottom: 28px;
+  min-height: 80px;
+}
+
+/* TIMER */
+.timer-ring-wrap {
+  display: flex; justify-content: center; margin-bottom: 24px;
+  position: relative;
+}
+.timer-svg { transform: rotate(-90deg); }
+.timer-track { fill: none; stroke: var(--border); stroke-width: 6; }
+.timer-fill {
+  fill: none; stroke: var(--red); stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear, stroke 0.5s;
+}
+.timer-number {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 40px; color: var(--ink);
+  letter-spacing: 2px; line-height: 1;
+}
+.timer-number.urgent { color: var(--red); }
+
+.decision-prompt {
+  font-size: 13px; color: var(--muted); text-align: center;
+  margin-bottom: 20px; font-style: italic;
+}
+
+.answer-row { display: flex; gap: 10px; }
+.answer-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-bottom: 2px solid var(--ink);
+  border-radius: 3px 3px 0 0;
+  padding: 14px 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px; font-weight: 400;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.answer-input:focus { border-bottom-color: var(--red); }
+.answer-input::placeholder { color: var(--muted); font-style: italic; }
+.lock-btn {
+  background: var(--red);
+  color: white; border: none;
+  border-radius: 3px; padding: 14px 20px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px; letter-spacing: 1px;
+  cursor: pointer; white-space: nowrap;
+  transition: all 0.15s;
+}
+.lock-btn:hover { background: var(--red2); transform: translateY(-1px); }
+
+/* LOCKED STATE */
+.locked-card {
+  background: var(--card);
+  border: 2px solid var(--green);
+  border-radius: 4px;
+  padding: 32px;
+  box-shadow: 6px 6px 0 rgba(39,174,96,0.3);
+  display: none;
+  animation: lockedIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.locked-card.show { display: block; }
+@keyframes lockedIn {
+  from { opacity: 0; transform: scale(0.95) rotate(-1deg); }
+  to { opacity: 1; transform: scale(1) rotate(0); }
+}
+.locked-stamp {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px; letter-spacing: 4px;
+  color: var(--green); margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.locked-question { font-size: 14px; color: var(--muted); font-style: italic; margin-bottom: 8px; }
+.locked-answer {
+  font-size: 28px; font-weight: 300; color: var(--ink);
+  border-left: 3px solid var(--green);
+  padding-left: 16px; line-height: 1.3;
+}
+.locked-time { font-size: 11px; color: var(--muted); margin-top: 12px; letter-spacing: 1px; }
+
+/* TIMEOUT STATE */
+.timeout-card {
+  background: var(--card);
+  border: 2px solid var(--red);
+  border-radius: 4px;
+  padding: 32px;
+  box-shadow: 6px 6px 0 rgba(192,57,43,0.3);
+  display: none;
+  animation: lockedIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.timeout-card.show { display: block; }
+.timeout-headline {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px; color: var(--red); letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+.timeout-msg { font-size: 15px; font-weight: 300; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+.timeout-question { font-size: 13px; color: var(--muted); font-style: italic; margin-bottom: 16px; }
+
+.retry-btn {
+  background: transparent; border: 2px solid var(--red);
+  border-radius: 3px; padding: 12px 28px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px; letter-spacing: 2px; color: var(--red);
+  cursor: pointer; transition: all 0.15s;
+}
+.retry-btn:hover { background: var(--red); color: white; }
+
+/* ── ADD DECISIONS ── */
+.add-section { margin-bottom: 48px; }
+.add-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 24px;
+  box-shadow: 0 2px 12px var(--shadow);
+}
+.add-input {
+  width: 100%;
+  background: var(--bg);
+  border: none;
+  border-bottom: 2px solid var(--border);
+  padding: 12px 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px; font-weight: 300;
+  color: var(--ink); outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 14px;
+}
+.add-input:focus { border-bottom-color: var(--ink); }
+.add-input::placeholder { color: var(--muted); font-style: italic; }
+.add-row { display: flex; justify-content: space-between; align-items: center; }
+.add-hint { font-size: 12px; color: var(--muted); font-style: italic; }
+.add-btn {
+  background: var(--ink); color: var(--bg);
+  border: none; border-radius: 3px;
+  padding: 10px 22px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px; letter-spacing: 2px;
+  cursor: pointer; transition: all 0.15s;
+}
+.add-btn:hover { background: var(--red); transform: translateY(-1px); }
+
+/* ── DECISION QUEUE ── */
+.queue-section { margin-bottom: 48px; }
+.queue-list { display: flex; flex-direction: column; gap: 8px; }
+.queue-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  animation: slideUp 0.3s ease both;
+  transition: border-color 0.2s;
+}
+.queue-item:hover { border-color: var(--ink); }
+.queue-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px; color: var(--muted);
+  min-width: 24px;
+}
+.queue-text { flex: 1; font-size: 15px; font-weight: 300; }
+.queue-del {
+  background: none; border: none;
+  color: var(--muted); cursor: pointer;
+  font-size: 14px; padding: 4px 6px;
+  border-radius: 3px; transition: all 0.15s;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.queue-item:hover .queue-del { opacity: 1; }
+.queue-del:hover { color: var(--red); background: rgba(192,57,43,0.08); }
+
+.empty-queue {
+  text-align: center; padding: 32px;
+  color: var(--muted); font-size: 14px;
+  font-style: italic;
+  border: 1px dashed var(--border);
+  border-radius: 3px;
+}
+
+/* ── ARCHIVE ── */
+.archive-section { margin-bottom: 48px; }
+.archive-list { display: flex; flex-direction: column; gap: 12px; }
+.archive-item {
+  padding: 18px 20px;
+  border-left: 3px solid var(--border);
+  background: var(--card);
+  border-radius: 0 3px 3px 0;
+  animation: slideUp 0.3s ease;
+}
+.archive-item.answered { border-left-color: var(--green); }
+.archive-item.skipped { border-left-color: var(--red); opacity: 0.6; }
+.archive-q { font-size: 13px; color: var(--muted); font-style: italic; margin-bottom: 6px; }
+.archive-a { font-size: 17px; font-weight: 300; color: var(--ink); }
+.archive-meta { font-size: 11px; color: var(--muted); margin-top: 6px; letter-spacing: 1px; }
+
+.no-archive { font-size: 13px; color: var(--muted); font-style: italic; }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── TICKER ANIMATION (rolling in decision) ── */
+@keyframes tickerRoll {
+  0% { opacity: 0; transform: translateY(-20px); filter: blur(4px); }
+  100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+.rolling { animation: tickerRoll 0.5s ease forwards; }
+
+@media (max-width: 480px) {
+  .title { font-size: 52px; }
+  .decision-body { padding: 20px; }
+  .answer-row { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="title">DECIDE<span>.</span></div>
+    <div class="tagline">You log it. We pick it. You decide it. No take-backs.</div>
+  </header>
+
+  <!-- TODAY'S DECISION -->
+  <div class="today-section">
+    <div class="section-label">Today's Decision</div>
+
+    <!-- IDLE: waiting to roll -->
+    <div class="idle-card" id="idleCard">
+      <div class="idle-time" id="clockDisplay">--:--</div>
+      <div class="idle-date" id="dateDisplay">Loading...</div>
+      <button class="roll-btn" onclick="rollDecision()">PICK MY DECISION</button>
+      <div class="idle-sub" id="idleSub">You have <strong id="queueCount">0</strong> decisions waiting.</div>
+    </div>
+
+    <!-- ACTIVE: timer counting down -->
+    <div class="decision-card" id="decisionCard">
+      <div class="decision-top">
+        <span class="decision-top-label">Decide Now</span>
+        <span class="decision-number" id="decisionNum">#1</span>
+      </div>
+      <div class="decision-body">
+        <div class="decision-text" id="decisionText"></div>
+        <div class="timer-ring-wrap">
+          <svg class="timer-svg" width="100" height="100" viewBox="0 0 100 100">
+            <circle class="timer-track" cx="50" cy="50" r="42"/>
+            <circle class="timer-fill" id="timerCircle" cx="50" cy="50" r="42"
+              stroke-dasharray="263.9"
+              stroke-dashoffset="0"/>
+          </svg>
+          <div class="timer-number" id="timerNumber">30</div>
+        </div>
+        <div class="decision-prompt">Type your answer and lock it in before time runs out.</div>
+        <div class="answer-row">
+          <input class="answer-input" id="answerInput" placeholder="My decision is..." maxlength="120">
+          <button class="lock-btn" onclick="lockDecision()">LOCK IN</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOCKED: decision saved -->
+    <div class="locked-card" id="lockedCard">
+      <div class="locked-stamp">✓ LOCKED IN — NO TAKE-BACKS</div>
+      <div class="locked-question" id="lockedQuestion"></div>
+      <div class="locked-answer" id="lockedAnswer"></div>
+      <div class="locked-time" id="lockedTime"></div>
+    </div>
+
+    <!-- TIMEOUT: ran out of time -->
+    <div class="timeout-card" id="timeoutCard">
+      <div class="timeout-headline">TIME'S UP.</div>
+      <div class="timeout-question" id="timeoutQuestion"></div>
+      <div class="timeout-msg">You had 30 seconds and didn't decide. The decision stays in your queue — but so does the guilt. Try again.</div>
+      <button class="retry-btn" onclick="retryDecision()">TRY AGAIN</button>
+    </div>
+  </div>
+
+  <!-- ADD DECISION -->
+  <div class="add-section">
+    <div class="section-label">Add a Decision You're Avoiding</div>
+    <div class="add-card">
+      <input class="add-input" id="newDecision" placeholder="e.g. Should I drop my Tuesday lab section?" maxlength="140">
+      <div class="add-row">
+        <span class="add-hint">Be honest. The more you avoid it, the sooner it gets picked.</span>
+        <button class="add-btn" onclick="addDecision()">ADD →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUEUE -->
+  <div class="queue-section">
+    <div class="section-label">Pending Decisions (<span id="queueLabel">0</span>)</div>
+    <div class="queue-list" id="queueList">
+      <div class="empty-queue">Nothing here yet. Add a decision you've been putting off.</div>
+    </div>
+  </div>
+
+  <!-- ARCHIVE -->
+  <div class="archive-section">
+    <div class="section-label">Decision Archive</div>
+    <div id="archiveList" class="archive-list">
+      <div class="no-archive">No decisions made yet.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── STATE ──
+function loadState() {
+  const raw = localStorage.getItem('decide_v1');
+  if (raw) return JSON.parse(raw);
+  return { queue: [], archive: [], todayDecision: null, todayDate: null };
+}
+function save() { localStorage.setItem('decide_v1', JSON.stringify(state)); }
+
+let state = loadState();
+let timerInterval = null;
+let timerSeconds = 30;
+let currentDecision = null;
+let retryMode = false;
+
+// ── CLOCK ──
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2,'0');
+  const m = now.getMinutes().toString().padStart(2,'0');
+  document.getElementById('clockDisplay').textContent = h + ':' + m;
+  document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric', year:'numeric'});
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── ADD DECISION ──
+function addDecision() {
+  const input = document.getElementById('newDecision');
+  const text = input.value.trim();
+  if (!text) { input.focus(); return; }
+  state.queue.push({ id: Date.now(), text });
+  input.value = '';
+  save();
+  renderQueue();
+  renderIdle();
+}
+document.getElementById('newDecision').addEventListener('keydown', e => { if (e.key === 'Enter') addDecision(); });
+
+// ── RENDER QUEUE ──
+function renderQueue() {
+  const list = document.getElementById('queueList');
+  const count = state.queue.length;
+  document.getElementById('queueLabel').textContent = count;
+  document.getElementById('queueCount').textContent = count;
+  if (count === 0) {
+    list.innerHTML = '<div class="empty-queue">Nothing here yet. Add a decision you\'ve been putting off.</div>';
+    return;
+  }
+  list.innerHTML = state.queue.map((d, i) => `
+    <div class="queue-item" style="animation-delay:${i*0.05}s">
+      <span class="queue-num">${String(i+1).padStart(2,'0')}</span>
+      <span class="queue-text">${escHtml(d.text)}</span>
+      <button class="queue-del" onclick="removeDecision(${d.id})" title="Remove">✕</button>
+    </div>
+  `).join('');
+}
+
+function removeDecision(id) {
+  state.queue = state.queue.filter(d => d.id !== id);
+  save(); renderQueue(); renderIdle();
+}
+
+// ── RENDER ARCHIVE ──
+function renderArchive() {
+  const list = document.getElementById('archiveList');
+  if (state.archive.length === 0) {
+    list.innerHTML = '<div class="no-archive">No decisions made yet.</div>';
+    return;
+  }
+  list.innerHTML = [...state.archive].reverse().map(a => `
+    <div class="archive-item ${a.answer ? 'answered' : 'skipped'}">
+      <div class="archive-q">${escHtml(a.question)}</div>
+      ${a.answer
+        ? `<div class="archive-a">"${escHtml(a.answer)}"</div>`
+        : `<div class="archive-a" style="color:var(--muted);font-style:italic">— No answer given —</div>`}
+      <div class="archive-meta">${a.date} · ${a.answer ? 'Decided in ' + a.seconds + 's' : 'Timed out'}</div>
+    </div>
+  `).join('');
+}
+
+// ── IDLE STATE ──
+function renderIdle() {
+  const today = todayStr();
+  // if already decided today, show locked/timeout
+  if (state.todayDate === today && state.todayDecision) {
+    const rec = state.archive.find(a => a.id === state.todayDecision);
+    if (rec) { showLocked(rec); return; }
+  }
+  showState('idle');
+}
+
+// ── ROLL DECISION ──
+function rollDecision() {
+  if (state.queue.length === 0) {
+    alert('Add at least one decision to your list first!');
+    return;
+  }
+  // pick random
+  const idx = Math.floor(Math.random() * state.queue.length);
+  currentDecision = state.queue[idx];
+  retryMode = false;
+  showState('decision');
+  document.getElementById('decisionText').classList.add('rolling');
+  document.getElementById('decisionText').textContent = currentDecision.text;
+  document.getElementById('decisionNum').textContent = '#' + (state.archive.length + 1);
+  setTimeout(() => document.getElementById('decisionText').classList.remove('rolling'), 600);
+  document.getElementById('answerInput').value = '';
+  document.getElementById('answerInput').focus();
+  startTimer();
+}
+
+function retryDecision() {
+  if (!currentDecision) { showState('idle'); return; }
+  retryMode = true;
+  showState('decision');
+  document.getElementById('decisionText').textContent = currentDecision.text;
+  document.getElementById('answerInput').value = '';
+  document.getElementById('answerInput').focus();
+  startTimer();
+}
+
+// ── TIMER ──
+function startTimer() {
+  clearInterval(timerInterval);
+  timerSeconds = 30;
+  updateTimerUI(30);
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    updateTimerUI(timerSeconds);
+    if (timerSeconds <= 0) {
+      clearInterval(timerInterval);
+      onTimeout();
+    }
+  }, 1000);
+}
+
+function updateTimerUI(s) {
+  const circ = document.getElementById('timerCircle');
+  const num = document.getElementById('timerNumber');
+  const total = 263.9;
+  const offset = total * (1 - s / 30);
+  circ.style.strokeDashoffset = offset;
+  circ.style.stroke = s <= 10 ? 'var(--red)' : s <= 20 ? 'var(--amber)' : 'var(--ink)';
+  num.textContent = s;
+  num.className = 'timer-number' + (s <= 10 ? ' urgent' : '');
+}
+
+// ── LOCK DECISION ──
+function lockDecision() {
+  const answer = document.getElementById('answerInput').value.trim();
+  if (!answer) {
+    document.getElementById('answerInput').style.borderBottomColor = 'var(--red)';
+    document.getElementById('answerInput').focus();
+    setTimeout(() => document.getElementById('answerInput').style.borderBottomColor = '', 1000);
+    return;
+  }
+  clearInterval(timerInterval);
+  const secondsTaken = 30 - timerSeconds;
+  const rec = saveDecision(currentDecision, answer, secondsTaken);
+  showLocked(rec);
+}
+
+function onTimeout() {
+  document.getElementById('timeoutQuestion').textContent = '"' + currentDecision.text + '"';
+  showState('timeout');
+  // archive as skipped
+  saveDecision(currentDecision, null, 30);
+}
+
+function saveDecision(decision, answer, seconds) {
+  const rec = {
+    id: Date.now(),
+    question: decision.text,
+    answer: answer,
+    seconds: seconds,
+    date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})
+  };
+  state.archive.push(rec);
+  state.todayDate = todayStr();
+  state.todayDecision = rec.id;
+  // remove from queue if answered
+  if (answer) state.queue = state.queue.filter(d => d.id !== decision.id);
+  save();
+  renderQueue();
+  renderArchive();
+  return rec;
+}
+
+function showLocked(rec) {
+  document.getElementById('lockedQuestion').textContent = '"' + rec.question + '"';
+  document.getElementById('lockedAnswer').textContent = rec.answer;
+  document.getElementById('lockedTime').textContent = 'Decided on ' + rec.date + ' · ' + rec.seconds + 's';
+  showState('locked');
+}
+
+// ── STATE SWITCHER ──
+function showState(s) {
+  document.getElementById('idleCard').style.display = s === 'idle' ? 'block' : 'none';
+  document.getElementById('decisionCard').className = 'decision-card' + (s === 'decision' ? ' show' : '');
+  document.getElementById('lockedCard').className = 'locked-card' + (s === 'locked' ? ' show' : '');
+  document.getElementById('timeoutCard').className = 'timeout-card' + (s === 'timeout' ? ' show' : '');
+}
+
+// ── ENTER KEY ──
+document.getElementById('answerInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') lockDecision();
+});
+
+// ── HELPERS ──
+function todayStr() { return new Date().toDateString(); }
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── INIT ──
+renderQueue();
+renderArchive();
+renderIdle();
+</script>
+</body>
+</html>
