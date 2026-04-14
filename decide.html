@@ -160,31 +160,28 @@ header { padding: 48px 0 32px; border-bottom: 2px solid var(--ink); margin-botto
 }
 
 .answer-row { display: flex; gap: 10px; }
-.answer-input {
+.yes-btn {
   flex: 1;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-bottom: 2px solid var(--ink);
-  border-radius: 3px 3px 0 0;
-  padding: 14px 16px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 16px; font-weight: 400;
-  color: var(--ink);
-  outline: none;
-  transition: border-color 0.2s;
-}
-.answer-input:focus { border-bottom-color: var(--red); }
-.answer-input::placeholder { color: var(--muted); font-style: italic; }
-.lock-btn {
-  background: var(--red);
+  background: var(--green);
   color: white; border: none;
-  border-radius: 3px; padding: 14px 20px;
+  border-radius: 3px; padding: 18px;
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 16px; letter-spacing: 1px;
-  cursor: pointer; white-space: nowrap;
+  font-size: 24px; letter-spacing: 3px;
+  cursor: pointer;
   transition: all 0.15s;
 }
-.lock-btn:hover { background: var(--red2); transform: translateY(-1px); }
+.yes-btn:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(39,174,96,0.3); }
+.no-btn {
+  flex: 1;
+  background: transparent;
+  color: var(--red); border: 2px solid var(--red);
+  border-radius: 3px; padding: 18px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px; letter-spacing: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.no-btn:hover { background: var(--red); color: white; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(192,57,43,0.3); }
 
 /* LOCKED STATE */
 .locked-card {
@@ -325,12 +322,48 @@ header { padding: 48px 0 32px; border-bottom: 2px solid var(--ink); margin-botto
   background: var(--card);
   border-radius: 0 3px 3px 0;
   animation: slideUp 0.3s ease;
+  display: flex; flex-direction: column; position: relative;
 }
 .archive-item.answered { border-left-color: var(--green); }
 .archive-item.skipped { border-left-color: var(--red); opacity: 0.6; }
 .archive-q { font-size: 13px; color: var(--muted); font-style: italic; margin-bottom: 6px; }
 .archive-a { font-size: 17px; font-weight: 300; color: var(--ink); }
 .archive-meta { font-size: 11px; color: var(--muted); margin-top: 6px; letter-spacing: 1px; }
+.archive-del {
+  position: absolute; top: 12px; right: 12px;
+  background: none; border: none;
+  color: var(--muted); cursor: pointer;
+  font-size: 13px; padding: 4px 7px;
+  border-radius: 3px; transition: all 0.15s;
+  opacity: 0;
+}
+.archive-item:hover .archive-del { opacity: 1; }
+.archive-del:hover { color: var(--red); background: rgba(192,57,43,0.08); }
+
+/* ── DELETED SECTION ── */
+.deleted-section { margin-bottom: 48px; }
+.deleted-list { display: flex; flex-direction: column; gap: 12px; }
+.deleted-item {
+  padding: 14px 20px;
+  border-left: 3px solid var(--muted);
+  background: var(--card);
+  border-radius: 0 3px 3px 0;
+  opacity: 0.5;
+  animation: slideUp 0.3s ease;
+  position: relative;
+}
+.deleted-item:hover { opacity: 0.8; }
+.deleted-item:hover .archive-del { opacity: 1; }
+.deleted-q { font-size: 13px; color: var(--muted); font-style: italic; margin-bottom: 4px; }
+.deleted-a { font-size: 15px; font-weight: 300; color: var(--muted); }
+.deleted-meta { font-size: 11px; color: var(--muted); margin-top: 4px; letter-spacing: 1px; }
+.deleted-label {
+  font-size: 10px; font-weight: 500; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--muted);
+  background: var(--bg2); border-radius: 2px;
+  padding: 2px 6px; display: inline-block; margin-bottom: 4px;
+}
+.no-deleted { font-size: 13px; color: var(--muted); font-style: italic; }
 
 .no-archive { font-size: 13px; color: var(--muted); font-style: italic; }
 
@@ -391,10 +424,10 @@ header { padding: 48px 0 32px; border-bottom: 2px solid var(--ink); margin-botto
           </svg>
           <div class="timer-number" id="timerNumber">30</div>
         </div>
-        <div class="decision-prompt">Type your answer and lock it in before time runs out.</div>
+        <div class="decision-prompt">Yes or no. You have 30 seconds.</div>
         <div class="answer-row">
-          <input class="answer-input" id="answerInput" placeholder="My decision is..." maxlength="120">
-          <button class="lock-btn" onclick="lockDecision()">LOCK IN</button>
+          <button class="yes-btn" onclick="lockDecision('Yes')">✓ YES</button>
+          <button class="no-btn" onclick="lockDecision('No')">✕ NO</button>
         </div>
       </div>
     </div>
@@ -445,6 +478,14 @@ header { padding: 48px 0 32px; border-bottom: 2px solid var(--ink); margin-botto
     </div>
   </div>
 
+  <!-- DELETED -->
+  <div class="deleted-section">
+    <div class="section-label">Deleted Choices</div>
+    <div id="deletedList" class="deleted-list">
+      <div class="no-deleted">Nothing deleted yet.</div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -452,7 +493,7 @@ header { padding: 48px 0 32px; border-bottom: 2px solid var(--ink); margin-botto
 function loadState() {
   const raw = localStorage.getItem('decide_v1');
   if (raw) return JSON.parse(raw);
-  return { queue: [], archive: [] };
+  return { queue: [], archive: [], deleted: [] };
 }
 function save() { localStorage.setItem('decide_v1', JSON.stringify(state)); }
 
@@ -518,14 +559,51 @@ function renderArchive() {
     return;
   }
   list.innerHTML = [...state.archive].reverse().map(a => `
-    <div class="archive-item ${a.answer ? 'answered' : 'skipped'}">
+    <div class="archive-item ${a.answer === 'Yes' ? 'answered' : 'skipped'}">
+      <button class="archive-del" onclick="deleteArchive(${a.id})" title="Delete">✕</button>
       <div class="archive-q">${escHtml(a.question)}</div>
       ${a.answer
-        ? `<div class="archive-a">"${escHtml(a.answer)}"</div>`
-        : `<div class="archive-a" style="color:var(--muted);font-style:italic">— No answer given —</div>`}
+        ? `<div class="archive-a" style="color:${a.answer === 'Yes' ? 'var(--green)' : 'var(--red)'}">${escHtml(a.answer)}</div>`
+        : `<div class="archive-a" style="color:var(--muted);font-style:italic">— Timed out —</div>`}
       <div class="archive-meta">${a.date} · ${a.answer ? 'Decided in ' + a.seconds + 's' : 'Timed out'}</div>
     </div>
   `).join('');
+}
+
+// ── DELETE FROM ARCHIVE ──
+function deleteArchive(id) {
+  const item = state.archive.find(a => a.id === id);
+  if (!item) return;
+  state.archive = state.archive.filter(a => a.id !== id);
+  if (!state.deleted) state.deleted = [];
+  state.deleted.push({ ...item, deletedAt: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) });
+  save();
+  renderArchive();
+  renderDeleted();
+}
+
+// ── RENDER DELETED ──
+function renderDeleted() {
+  const list = document.getElementById('deletedList');
+  if (!state.deleted || state.deleted.length === 0) {
+    list.innerHTML = '<div class="no-deleted">Nothing deleted yet.</div>';
+    return;
+  }
+  list.innerHTML = [...state.deleted].reverse().map(d => `
+    <div class="deleted-item">
+      <button class="archive-del" onclick="permanentDelete(${d.id})" title="Remove permanently">✕</button>
+      <div class="deleted-label">DELETED · ${d.deletedAt}</div>
+      <div class="deleted-q">${escHtml(d.question)}</div>
+      <div class="deleted-a">${d.answer ? escHtml(d.answer) : '— Timed out —'} · ${d.date}</div>
+    </div>
+  `).join('');
+}
+
+// ── PERMANENTLY REMOVE FROM DELETED ──
+function permanentDelete(id) {
+  state.deleted = state.deleted.filter(d => d.id !== id);
+  save();
+  renderDeleted();
 }
 
 // ── IDLE STATE ──
@@ -548,8 +626,6 @@ function rollDecision() {
   document.getElementById('decisionText').textContent = currentDecision.text;
   document.getElementById('decisionNum').textContent = '#' + (state.archive.length + 1);
   setTimeout(() => document.getElementById('decisionText').classList.remove('rolling'), 600);
-  document.getElementById('answerInput').value = '';
-  document.getElementById('answerInput').focus();
   startTimer();
 }
 
@@ -558,8 +634,6 @@ function retryDecision() {
   retryMode = true;
   showState('decision');
   document.getElementById('decisionText').textContent = currentDecision.text;
-  document.getElementById('answerInput').value = '';
-  document.getElementById('answerInput').focus();
   startTimer();
 }
 
@@ -590,14 +664,7 @@ function updateTimerUI(s) {
 }
 
 // ── LOCK DECISION ──
-function lockDecision() {
-  const answer = document.getElementById('answerInput').value.trim();
-  if (!answer) {
-    document.getElementById('answerInput').style.borderBottomColor = 'var(--red)';
-    document.getElementById('answerInput').focus();
-    setTimeout(() => document.getElementById('answerInput').style.borderBottomColor = '', 1000);
-    return;
-  }
+function lockDecision(answer) {
   clearInterval(timerInterval);
   const secondsTaken = 30 - timerSeconds;
   const rec = saveDecision(currentDecision, answer, secondsTaken);
@@ -620,8 +687,8 @@ function saveDecision(decision, answer, seconds) {
     date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})
   };
   state.archive.push(rec);
-  // remove from queue if answered
-  if (answer) state.queue = state.queue.filter(d => d.id !== decision.id);
+  // only remove from queue if Yes — No keeps it in the list
+  if (answer === 'Yes') state.queue = state.queue.filter(d => d.id !== decision.id);
   save();
   renderQueue();
   renderArchive();
@@ -632,6 +699,14 @@ function showLocked(rec) {
   document.getElementById('lockedQuestion').textContent = '"' + rec.question + '"';
   document.getElementById('lockedAnswer').textContent = rec.answer;
   document.getElementById('lockedTime').textContent = 'Decided on ' + rec.date + ' · ' + rec.seconds + 's';
+  const card = document.getElementById('lockedCard');
+  card.style.borderColor = rec.answer === 'Yes' ? 'var(--green)' : 'var(--red)';
+  card.style.boxShadow = rec.answer === 'Yes' ? '6px 6px 0 rgba(39,174,96,0.3)' : '6px 6px 0 rgba(192,57,43,0.3)';
+  document.getElementById('lockedAnswer').style.borderLeftColor = rec.answer === 'Yes' ? 'var(--green)' : 'var(--red)';
+  document.getElementById('lockedAnswer').style.color = rec.answer === 'Yes' ? 'var(--green)' : 'var(--red)';
+  const stamp = document.querySelector('.locked-stamp');
+  stamp.style.color = rec.answer === 'Yes' ? 'var(--green)' : 'var(--red)';
+  stamp.textContent = rec.answer === 'Yes' ? '✓ YES — LOCKED IN' : '✕ NO — STAYS IN QUEUE';
   showState('locked');
 }
 
@@ -643,10 +718,7 @@ function showState(s) {
   document.getElementById('timeoutCard').className = 'timeout-card' + (s === 'timeout' ? ' show' : '');
 }
 
-// ── ENTER KEY ──
-document.getElementById('answerInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') lockDecision();
-});
+
 
 // ── HELPERS ──
 function todayStr() { return new Date().toDateString(); }
@@ -657,6 +729,7 @@ function escHtml(s) {
 // ── INIT ──
 renderQueue();
 renderArchive();
+renderDeleted();
 renderIdle();
 </script>
 </body>
