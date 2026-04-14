@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decide. — No Take-Backs</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f0e8;
+  --bg2: #ede8df;
+  --card: #ffffff;
+  --ink: #1a1612;
+  --ink2: #3d3830;
+  --muted: #9a9080;
+  --red: #c0392b;
+  --red2: #e74c3c;
+  --green: #27ae60;
+  --amber: #e67e22;
+  --border: #d4cfc5;
+  --shadow: rgba(26,22,18,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0; opacity: 0.4;
+}
+
+.app { position: relative; z-index: 1; max-width: 580px; margin: 0 auto; padding: 0 20px 80px; }
+
+/* ── HEADER ── */
+header { padding: 48px 0 32px; border-bottom: 2px solid var(--ink); margin-bottom: 40px; }
+.title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 72px; line-height: 0.9;
+  letter-spacing: 2px;
+  color: var(--ink);
+}
+.title span { color: var(--red); }
+.tagline {
+  font-size: 13px; font-weight: 300; font-style: italic;
+  color: var(--muted); margin-top: 8px; letter-spacing: 1px;
+}
+
+/* ── STATS DASHBOARD ── */
+.stats-section { margin-bottom: 48px; }
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.stat-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 16px 12px;
+  text-align: center;
+  box-shadow: 0 2px 8px var(--shadow);
+  transition: transform 0.15s;
+}
+.stat-box:hover { transform: translateY(-2px); }
+.stat-number {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px; line-height: 1;
+  color: var(--ink); letter-spacing: 1px;
+}
+.stat-number.red { color: var(--red); }
+.stat-number.green { color: var(--green); }
+.stat-number.amber { color: var(--amber); }
+.stat-label {
+  font-size: 9px; font-weight: 500; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--muted);
+  margin-top: 4px;
+}
+.stat-sub {
+  font-size: 11px; color: var(--muted); margin-top: 2px;
+}
+
+/* ── TODAY'S DECISION ── */
+.today-section { margin-bottom: 48px; }
+
+.section-label {
+  font-size: 10px; font-weight: 500; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-label::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+/* IDLE */
+.idle-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 40px 32px;
+  text-align: center;
+  box-shadow: 0 2px 12px var(--shadow);
+}
+.idle-time {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 56px; color: var(--ink);
+  letter-spacing: 2px; line-height: 1;
+  margin-bottom: 4px;
+}
+.idle-date { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+.roll-btn {
+  background: var(--ink);
+  color: var(--bg);
+  border: none; border-radius: 3px;
+  padding: 16px 40px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px; letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: inline-block;
+}
+.roll-btn:hover { background: var(--red); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(192,57,43,0.3); }
+.roll-btn:active { transform: translateY(0); }
+.idle-sub { font-size: 12px; color: var(--muted); margin-top: 12px; font-style: italic; }
+
+/* ACTIVE DECISION */
+.decision-card {
+  background: var(--card);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 6px 6px 0 var(--ink);
+  display: none;
+}
+.decision-card.show { display: block; }
+
+.decision-top {
+  background: var(--ink);
+  padding: 12px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.decision-top-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px; letter-spacing: 3px;
+  color: var(--bg); opacity: 0.7;
+}
+.decision-number {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px; letter-spacing: 2px;
+  color: var(--bg); opacity: 0.5;
+}
+
+.decision-body { padding: 32px; }
+.decision-text {
+  font-size: 26px; font-weight: 300; line-height: 1.3;
+  color: var(--ink); margin-bottom: 12px;
+  min-height: 80px;
+}
+
+/* ── AVOIDANCE STREAK BADGE ── */
+.streak-badge {
+  display: none;
+  align-items: center; gap: 8px;
+  background: rgba(192,57,43,0.08);
+  border: 1px solid rgba(192,57,43,0.2);
+  border-radius: 3px;
+  padding: 8px 12px;
+  margin-bottom: 20px;
+  font-size: 12px; color: var(--red);
+  font-weight: 500;
+}
+.streak-badge.show { display: flex; }
+.streak-icon { font-size: 16px; }
+
+/* TIMER */
+.timer-ring-wrap {
+  display: flex; justify-content: center; margin-bottom: 24px;
+  position: relative;
+}
+.timer-svg { transform: rotate(-90deg); }
+.timer-track { fill: none; stroke: var(--border); stroke-width: 6; }
+.timer-fill {
+  fill: none; stroke: var(--red); stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear, stroke 0.5s;
+}
+.timer-number {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 40px; color: var(--ink);
+  letter-spacing: 2px; line-height: 1;
+}
+.timer-number.urgent { color: var(--red); }
+
+.decision-prompt {
+  font-size: 13px; color: var(--muted); text-align: center;
+  margin-bottom: 20px; font-style: italic;
+}
+
+/* ── WHY AVOIDING PROMPT ── */
+.why-section {
+  margin-bottom: 20px;
+}
+.why-label {
+  font-size: 11px; font-weight: 500; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 8px;
+}
+.why-input {
+  width: 100%;
+  background: var(--bg);
+  border: none;
+  border-bottom: 1px solid var(--border);
+  padding: 8px 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 300;
+  color: var(--ink); outline: none;
+  transition: border-color 0.2s;
+}
+.why-input:focus { border-bottom-color: var(--amber); }
+.why-input::placeholder { color: var(--muted); font-style: italic; }
+
+.answer-row { display: flex; gap: 10px; }
+.yes-btn {
+  flex: 1;
+  background: var(--green);
+  color: white; border: none;
+  border-radius: 3px; padding: 18px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px; letter-spacing: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.yes-btn:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(39,174,96,0.3); }
+.no-btn {
+  flex: 1;
+  background: transparent;
+  color: var(--red); border: 2px solid var(--red);
+  border-radius: 3px; padding: 18px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px; letter-spacing: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.no-btn:hover { background: var(--red); color: white; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(192,57,43,0.3); }
+
+/* LOCKED STATE */
+.locked-card {
+  background: var(--card);
+  border: 2px solid var(--green);
+  border-radius: 4px;
+  padding: 32px;
+  box-shadow: 6px 6px 0 rgba(39,174,96,0.3);
+  display: none;
+  animation: lockedIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.locked-card.show { display: block; }
+@keyframes lockedIn {
+  from { opacity: 0; transform: scale(0.95) rotate(-1deg); }
+  to { opacity: 1; transform: scale(1) rotate(0); }
+}
+.locked-stamp {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px; letter-spacing: 4px;
+  color: var(--green); margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.locked-question { font-size: 14px; color: var(--muted); font-style: italic; margin-bottom: 8px; }
+.locked-answer {
+  font-size: 28px; font-weight: 300; color: var(--ink);
+  border-left: 3px solid var(--green);
+  padding-left: 16px; line-height: 1.3;
+}
+.locked-time { font-size: 11px; color: var(--muted); margin-top: 12px; letter-spacing: 1px; }
+
+/* ── FIRST STEP PROMPT (after YES) ── */
+.first-step-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  display: none;
+}
+.first-step-section.show { display: block; }
+.first-step-label {
+  font-size: 11px; font-weight: 500; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--green);
+  margin-bottom: 8px;
+}
+.first-step-input {
+  width: 100%;
+  background: var(--bg);
+  border: none;
+  border-bottom: 2px solid var(--green);
+  padding: 10px 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px; font-weight: 300;
+  color: var(--ink); outline: none;
+}
+.first-step-input::placeholder { color: var(--muted); font-style: italic; }
+.first-step-save {
+  margin-top: 10px;
+  background: var(--green); color: white;
+  border: none; border-radius: 3px;
+  padding: 10px 20px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px; letter-spacing: 2px;
+  cursor: pointer; transition: all 0.15s;
+}
+.first-step-save:hover { filter: brightness(1.1); }
+.first-step-saved {
+  font-size: 12px; color: var(--green);
+  font-style: italic; margin-top: 8px;
+  display: none;
+}
+
+/* TIMEOUT STATE */
+.timeout-card {
+  background: var(--card);
+  border: 2px solid var(--red);
+  border-radius: 4px;
+  padding: 32px;
+  box-shadow: 6px 6px 0 rgba(192,57,43,0.3);
+  display: none;
+  animation: lockedIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.timeout-card.show { display: block; }
+.timeout-headline {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px; color: var(--red); letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+.timeout-msg { font-size: 15px; font-weight: 300; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+.timeout-question { font-size: 13px; color: var(--muted); font-style: italic; margin-bottom: 16px; }
+.timeout-avoid-count {
+  font-size: 13px; color: var(--red);
+  font-weight: 500; margin-bottom: 16px;
+  padding: 8px 12px;
+  background: rgba(192,57,43,0.08);
+  border-radius: 3px;
+  display: none;
+}
+.timeout-avoid-count.show { display: block; }
+
+.retry-btn {
+  background: transparent; border: 2px solid var(--red);
+  border-radius: 3px; padding: 12px 28px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px; letter-spacing: 2px; color: var(--red);
+  cursor: pointer; transition: all 0.15s;
+}
+.retry-btn:hover { background: var(--red); color: white; }
+
+/* ── CATEGORY TAGS ── */
+.tag-row {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-bottom: 14px;
+}
+.tag-btn {
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px; color: var(--muted);
+  cursor: pointer; transition: all 0.15s;
+}
+.tag-btn:hover { border-color: var(--ink); color: var(--ink); }
+.tag-btn.active {
+  background: var(--ink); color: var(--bg);
+  border-color: var(--ink);
+}
+.tag-btn.active.work { background: #2980b9; border-color: #2980b9; }
+.tag-btn.active.personal { background: #8e44ad; border-color: #8e44ad; }
+.tag-btn.active.health { background: var(--green); border-color: var(--green); }
+.tag-btn.active.money { background: var(--amber); border-color: var(--amber); }
+
+/* ── ADD DECISIONS ── */
+.add-section { margin-bottom: 48px; }
+.add-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 24px;
+  box-shadow: 0 2px 12px var(--shadow);
+}
+.add-input {
+  width: 100%;
+  background: var(--bg);
+  border: none;
+  border-bottom: 2px solid var(--border);
+  padding: 12px 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px; font-weight: 300;
+  color: var(--ink); outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 14px;
+}
+.add-input:focus { border-bottom-color: var(--ink); }
+.add-input::placeholder { color: var(--muted); font-style: italic; }
+
+.add-tag-row {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-bottom: 14px;
+}
+.add-tag {
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: transparent;
+  font-size: 12px; color: var(--muted);
+  cursor: pointer; transition: all 0.15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.add-tag:hover { border-color: var(--ink); color: var(--ink); }
+.add-tag.selected { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.add-tag.selected.work { background: #2980b9; border-color: #2980b9; }
+.add-tag.selected.personal { background: #8e44ad; border-color: #8e44ad; }
+.add-tag.selected.health { background: var(--green); border-color: var(--green); }
+.add-tag.selected.money { background: var(--amber); border-color: var(--amber); }
+
+.add-row { display: flex; justify-content: space-between; align-items: center; }
+.add-hint { font-size: 12px; color: var(--muted); font-style: italic; }
+.add-btn {
+  background: var(--ink); color: var(--bg);
+  border: none; border-radius: 3px;
+  padding: 10px 22px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px; letter-spacing: 2px;
+  cursor: pointer; transition: all 0.15s;
+}
+.add-btn:hover { background: var(--red); transform: translateY(-1px); }
+
+/* ── FILTER ROW ── */
+.filter-row {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-bottom: 16px;
+}
+.filter-btn {
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: transparent;
+  font-size: 11px; color: var(--muted);
+  cursor: pointer; transition: all 0.15s;
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: 0.5px;
+}
+.filter-btn:hover { border-color: var(--ink); color: var(--ink); }
+.filter-btn.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+/* ── DECISION QUEUE ── */
+.queue-section { margin-bottom: 48px; }
+.queue-list { display: flex; flex-direction: column; gap: 8px; }
+.queue-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  animation: slideUp 0.3s ease both;
+  transition: border-color 0.2s;
+}
+.queue-item:hover { border-color: var(--ink); }
+.queue-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px; color: var(--muted);
+  min-width: 24px;
+}
+.queue-text { flex: 1; font-size: 15px; font-weight: 300; }
+.queue-tag {
+  font-size: 10px; font-weight: 500; letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 2px 8px; border-radius: 20px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.queue-tag.work { color: #2980b9; border-color: #2980b9; background: rgba(41,128,185,0.08); }
+.queue-tag.personal { color: #8e44ad; border-color: #8e44ad; background: rgba(142,68,173,0.08); }
+.queue-tag.health { color: var(--green); border-color: var(--green); background: rgba(39,174,96,0.08); }
+.queue-tag.money { color: var(--amber); border-color: var(--amber); background: rgba(230,126,34,0.08); }
+.queue-avoids {
+  font-size: 10px; color: var(--red);
+  font-weight: 500; letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.queue-del {
+  background: none; border: none;
+  color: var(--muted); cursor: pointer;
+  font-size: 14px; padding: 4px 6px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.queue-item:hover .queue-del { opacity: 1; }
+.queue-del:hover { color: var(--red); background: rgba(192,57,43,0.08); }
+
+.empty-queue {
+  text-align: center; padding: 32px;
+  color: var(--muted); font-size: 14px;
+  font-style: italic;
+  border: 1px dashed var(--border);
+  border-radius: 3px;
+}
+
+/* ── ARCHIVE ── */
+.archive-section { margin-bottom: 48px; }
+.archive-list { display: flex; flex-direction: column; gap: 12px; }
+.archive-item {
+  padding: 18px 20px;
+  border-left: 3px solid var(--border);
+  background: var(--card);
+  border-radius: 0 3px 3px 0;
+  animation: slideUp 0.3s ease;
+  display: flex; flex-direction: column; position: relative;
+}
+.archive-item.answered { border-left-color: var(--green); }
+.archive-item.skipped { border-left-color: var(--red); opacity: 0.6; }
+.archive-q { font-size: 13px; color: var(--muted); font-style: italic; margin-bottom: 6px; }
+.archive-a { font-size: 17px; font-weight: 300; color: var(--ink); }
+.archive-meta { font-size: 11px; color: var(--muted); margin-top: 6px; letter-spacing: 1px; }
+.archive-step {
+  font-size: 12px; color: var(--green);
+  margin-top: 6px; font-style: italic;
+}
+.archive-why {
+  font-size: 12px; color: var(--amber);
+  margin-top: 4px; font-style: italic;
+}
+.archive-del {
+  position: absolute; top: 12px; right: 12px;
+  background: none; border: none;
+  color: var(--muted); cursor: pointer;
+  font-size: 13px; padding: 4px 7px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.archive-item:hover .archive-del { opacity: 1; }
+.archive-del:hover { color: var(--red); background: rgba(192,57,43,0.08); }
+
+/* ── DELETED SECTION ── */
+.deleted-section { margin-bottom: 48px; }
+.deleted-list { display: flex; flex-direction: column; gap: 12px; }
+.deleted-item {
+  padding: 14px 20px;
+  border-left: 3px solid var(--muted);
+  background: var(--card);
+  border-radius: 0 3px 3px 0;
+  opacity: 0.5;
+  animation: slideUp 0.3s ease;
+  position: relative;
+}
+.deleted-item:hover { opacity: 0.8; }
+.deleted-item:hover .archive-del { opacity: 1; }
+.deleted-q { font-size: 13px; color: var(--muted); font-style: italic; margin-bottom: 4px; }
+.deleted-a { font-size: 15px; font-weight: 300; color: var(--muted); }
+.deleted-label {
+  font-size: 10px; font-weight: 500; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--muted);
+  background: var(--bg2); border-radius: 2px;
+  padding: 2px 6px; display: inline-block; margin-bottom: 4px;
+}
+.no-deleted { font-size: 13px; color: var(--muted); font-style: italic; }
+.no-archive { font-size: 13px; color: var(--muted); font-style: italic; }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes tickerRoll {
+  0% { opacity: 0; transform: translateY(-20px); filter: blur(4px); }
+  100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+.rolling { animation: tickerRoll 0.5s ease forwards; }
+
+@media (max-width: 480px) {
+  .title { font-size: 52px; }
+  .decision-body { padding: 20px; }
+  .answer-row { flex-direction: column; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="title">DECIDE<span>.</span></div>
+    <div class="tagline">You log it. We pick it. You decide it. No take-backs.</div>
+  </header>
+
+  <!-- ── STATS DASHBOARD ── -->
+  <div class="stats-section">
+    <div class="section-label">Your Decision Stats</div>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-number green" id="statYes">0</div>
+        <div class="stat-label">Said Yes</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number red" id="statNo">0</div>
+        <div class="stat-label">Said No</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number amber" id="statTimeout">0</div>
+        <div class="stat-label">Timed Out</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="statAvgTime">—</div>
+        <div class="stat-label">Avg Seconds</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TODAY'S DECISION -->
+  <div class="today-section">
+    <div class="section-label">Current Decision</div>
+
+    <!-- IDLE -->
+    <div class="idle-card" id="idleCard">
+      <div class="idle-time" id="clockDisplay">--:--</div>
+      <div class="idle-date" id="dateDisplay">Loading...</div>
+      <button class="roll-btn" onclick="rollDecision()">PICK MY DECISION</button>
+      <div class="idle-sub" id="idleSub">You have <strong id="queueCount">0</strong> decisions waiting.</div>
+    </div>
+
+    <!-- ACTIVE -->
+    <div class="decision-card" id="decisionCard">
+      <div class="decision-top">
+        <span class="decision-top-label">Decide Now</span>
+        <span class="decision-number" id="decisionNum">#1</span>
+      </div>
+      <div class="decision-body">
+        <div class="decision-text" id="decisionText"></div>
+
+        <!-- AVOIDANCE STREAK BADGE -->
+        <div class="streak-badge" id="streakBadge">
+          <span class="streak-icon">⚠️</span>
+          <span id="streakText">You've avoided this decision before.</span>
+        </div>
+
+        <div class="timer-ring-wrap">
+          <svg class="timer-svg" width="100" height="100" viewBox="0 0 100 100">
+            <circle class="timer-track" cx="50" cy="50" r="42"/>
+            <circle class="timer-fill" id="timerCircle" cx="50" cy="50" r="42"
+              stroke-dasharray="263.9"
+              stroke-dashoffset="0"/>
+          </svg>
+          <div class="timer-number" id="timerNumber">30</div>
+        </div>
+
+        <!-- WHY ARE YOU AVOIDING THIS? -->
+        <div class="why-section">
+          <div class="why-label">Why are you avoiding this?</div>
+          <input class="why-input" id="whyInput" placeholder="Be honest with yourself..." maxlength="120">
+        </div>
+
+        <div class="decision-prompt">Yes or no. You have 30 seconds.</div>
+        <div class="answer-row">
+          <button class="yes-btn" onclick="lockDecision('Yes')">✓ YES</button>
+          <button class="no-btn" onclick="lockDecision('No')">✕ NO</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOCKED -->
+    <div class="locked-card" id="lockedCard">
+      <div class="locked-stamp">✓ LOCKED IN — NO TAKE-BACKS</div>
+      <div class="locked-question" id="lockedQuestion"></div>
+      <div class="locked-answer" id="lockedAnswer"></div>
+      <div class="locked-time" id="lockedTime"></div>
+
+      <!-- FIRST STEP PROMPT -->
+      <div class="first-step-section" id="firstStepSection">
+        <div class="first-step-label">→ What's your first step?</div>
+        <input class="first-step-input" id="firstStepInput" placeholder="e.g. Send the email tonight, open the document now..." maxlength="120">
+        <br>
+        <button class="first-step-save" onclick="saveFirstStep()">COMMIT TO THIS STEP</button>
+        <div class="first-step-saved" id="firstStepSaved">✓ Step saved. Now go do it.</div>
+      </div>
+
+      <button class="retry-btn" style="margin-top:20px;border-color:var(--green);color:var(--green);" onclick="showState('idle')">PICK ANOTHER →</button>
+    </div>
+
+    <!-- TIMEOUT -->
+    <div class="timeout-card" id="timeoutCard">
+      <div class="timeout-headline">TIME'S UP.</div>
+      <div class="timeout-question" id="timeoutQuestion"></div>
+      <div class="timeout-avoid-count" id="timeoutAvoidCount"></div>
+      <div class="timeout-msg">You had 30 seconds and didn't decide. The decision stays in your queue — but so does the guilt. Try again.</div>
+      <button class="retry-btn" onclick="retryDecision()">TRY AGAIN</button>
+    </div>
+  </div>
+
+  <!-- ADD DECISION -->
+  <div class="add-section">
+    <div class="section-label">Add a Decision You're Avoiding</div>
+    <div class="add-card">
+      <input class="add-input" id="newDecision" placeholder="e.g. Should I drop my Tuesday lab section?" maxlength="140">
+      <div class="add-tag-row" id="addTagRow">
+        <button class="add-tag" data-tag="work" onclick="toggleAddTag(this)">Work</button>
+        <button class="add-tag personal" data-tag="personal" onclick="toggleAddTag(this)">Personal</button>
+        <button class="add-tag health" data-tag="health" onclick="toggleAddTag(this)">Health</button>
+        <button class="add-tag money" data-tag="money" onclick="toggleAddTag(this)">Money</button>
+        <button class="add-tag" data-tag="" onclick="toggleAddTag(this)">No tag</button>
+      </div>
+      <div class="add-row">
+        <span class="add-hint">The more you avoid it, the sooner it gets picked.</span>
+        <button class="add-btn" onclick="addDecision()">ADD →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUEUE -->
+  <div class="queue-section">
+    <div class="section-label">Pending Decisions (<span id="queueLabel">0</span>)</div>
+    <div class="filter-row" id="filterRow">
+      <button class="filter-btn active" data-filter="all" onclick="setFilter(this)">All</button>
+      <button class="filter-btn" data-filter="work" onclick="setFilter(this)">Work</button>
+      <button class="filter-btn" data-filter="personal" onclick="setFilter(this)">Personal</button>
+      <button class="filter-btn" data-filter="health" onclick="setFilter(this)">Health</button>
+      <button class="filter-btn" data-filter="money" onclick="setFilter(this)">Money</button>
+    </div>
+    <div class="queue-list" id="queueList">
+      <div class="empty-queue">Nothing here yet. Add a decision you've been putting off.</div>
+    </div>
+  </div>
+
+  <!-- ARCHIVE -->
+  <div class="archive-section">
+    <div class="section-label">Decision Archive</div>
+    <div id="archiveList" class="archive-list">
+      <div class="no-archive">No decisions made yet.</div>
+    </div>
+  </div>
+
+  <!-- DELETED -->
+  <div class="deleted-section">
+    <div class="section-label">Deleted Choices</div>
+    <div id="deletedList" class="deleted-list">
+      <div class="no-deleted">Nothing deleted yet.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── STATE ──
+function loadState() {
+  const raw = localStorage.getItem('decide_v2');
+  if (raw) return JSON.parse(raw);
+  return { queue: [], archive: [], deleted: [] };
+}
+function save() { localStorage.setItem('decide_v2', JSON.stringify(state)); }
+
+let state = loadState();
+let timerInterval = null;
+let timerSeconds = 30;
+let currentDecision = null;
+let retryMode = false;
+let selectedAddTag = '';
+let activeFilter = 'all';
+
+// ── CLOCK ──
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2,'0');
+  const m = now.getMinutes().toString().padStart(2,'0');
+  document.getElementById('clockDisplay').textContent = h + ':' + m;
+  document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric', year:'numeric'});
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── TAG SELECTION (add form) ──
+function toggleAddTag(btn) {
+  document.querySelectorAll('.add-tag').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedAddTag = btn.dataset.tag;
+}
+
+// ── FILTER ──
+function setFilter(btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeFilter = btn.dataset.filter;
+  renderQueue();
+}
+
+// ── ADD DECISION ──
+function addDecision() {
+  const input = document.getElementById('newDecision');
+  const text = input.value.trim();
+  if (!text) { input.focus(); return; }
+  state.queue.push({ id: Date.now(), text, tag: selectedAddTag, avoidCount: 0 });
+  input.value = '';
+  document.querySelectorAll('.add-tag').forEach(b => b.classList.remove('selected'));
+  selectedAddTag = '';
+  save();
+  renderQueue();
+  renderIdle();
+}
+document.getElementById('newDecision').addEventListener('keydown', e => { if (e.key === 'Enter') addDecision(); });
+
+// ── RENDER QUEUE ──
+function renderQueue() {
+  const list = document.getElementById('queueList');
+  const total = state.queue.length;
+  document.getElementById('queueLabel').textContent = total;
+  document.getElementById('queueCount').textContent = total;
+
+  const filtered = activeFilter === 'all'
+    ? state.queue
+    : state.queue.filter(d => d.tag === activeFilter);
+
+  if (filtered.length === 0) {
+    list.innerHTML = total === 0
+      ? '<div class="empty-queue">Nothing here yet. Add a decision you\'ve been putting off.</div>'
+      : '<div class="empty-queue">No decisions in this category.</div>';
+    return;
+  }
+  list.innerHTML = filtered.map((d, i) => `
+    <div class="queue-item" style="animation-delay:${i*0.05}s">
+      <span class="queue-num">${String(i+1).padStart(2,'0')}</span>
+      <span class="queue-text">${escHtml(d.text)}</span>
+      ${d.tag ? `<span class="queue-tag ${d.tag}">${d.tag}</span>` : ''}
+      ${d.avoidCount > 0 ? `<span class="queue-avoids">Avoided ${d.avoidCount}×</span>` : ''}
+      <button class="queue-del" onclick="removeDecision(${d.id})" title="Remove">✕</button>
+    </div>
+  `).join('');
+}
+
+function removeDecision(id) {
+  state.queue = state.queue.filter(d => d.id !== id);
+  save(); renderQueue(); renderIdle();
+}
+
+// ── RENDER ARCHIVE ──
+function renderArchive() {
+  const list = document.getElementById('archiveList');
+  if (state.archive.length === 0) {
+    list.innerHTML = '<div class="no-archive">No decisions made yet.</div>';
+    return;
+  }
+  list.innerHTML = [...state.archive].reverse().map(a => `
+    <div class="archive-item ${a.answer === 'Yes' ? 'answered' : 'skipped'}">
+      <button class="archive-del" onclick="deleteArchive(${a.id})" title="Delete">✕</button>
+      <div class="archive-q">${escHtml(a.question)}</div>
+      ${a.answer
+        ? `<div class="archive-a" style="color:${a.answer === 'Yes' ? 'var(--green)' : 'var(--red)'}">${escHtml(a.answer)}</div>`
+        : `<div class="archive-a" style="color:var(--muted);font-style:italic">— Timed out —</div>`}
+      ${a.why ? `<div class="archive-why">Why avoided: "${escHtml(a.why)}"</div>` : ''}
+      ${a.firstStep ? `<div class="archive-step">First step: "${escHtml(a.firstStep)}"</div>` : ''}
+      <div class="archive-meta">${a.date} · ${a.answer ? 'Decided in ' + a.seconds + 's' : 'Timed out'}${a.tag ? ' · ' + a.tag : ''}</div>
+    </div>
+  `).join('');
+}
+
+// ── DELETE FROM ARCHIVE ──
+function deleteArchive(id) {
+  const item = state.archive.find(a => a.id === id);
+  if (!item) return;
+  state.archive = state.archive.filter(a => a.id !== id);
+  if (!state.deleted) state.deleted = [];
+  state.deleted.push({ ...item, deletedAt: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) });
+  save();
+  renderArchive();
+  renderDeleted();
+  renderStats();
+}
+
+// ── RENDER DELETED ──
+function renderDeleted() {
+  const list = document.getElementById('deletedList');
+  if (!state.deleted || state.deleted.length === 0) {
+    list.innerHTML = '<div class="no-deleted">Nothing deleted yet.</div>';
+    return;
+  }
+  list.innerHTML = [...state.deleted].reverse().map(d => `
+    <div class="deleted-item">
+      <button class="archive-del" onclick="permanentDelete(${d.id})" title="Remove permanently">✕</button>
+      <div class="deleted-label">DELETED · ${d.deletedAt}</div>
+      <div class="deleted-q">${escHtml(d.question)}</div>
+      <div class="deleted-a">${d.answer ? escHtml(d.answer) : '— Timed out —'} · ${d.date}</div>
+    </div>
+  `).join('');
+}
+
+function permanentDelete(id) {
+  state.deleted = state.deleted.filter(d => d.id !== id);
+  save();
+  renderDeleted();
+}
+
+// ── STATS DASHBOARD ──
+function renderStats() {
+  const yes = state.archive.filter(a => a.answer === 'Yes').length;
+  const no = state.archive.filter(a => a.answer === 'No').length;
+  const timeouts = state.archive.filter(a => !a.answer).length;
+  const decided = state.archive.filter(a => a.answer && a.seconds != null);
+  const avg = decided.length > 0
+    ? Math.round(decided.reduce((sum, a) => sum + a.seconds, 0) / decided.length)
+    : null;
+
+  document.getElementById('statYes').textContent = yes;
+  document.getElementById('statNo').textContent = no;
+  document.getElementById('statTimeout').textContent = timeouts;
+  document.getElementById('statAvgTime').textContent = avg !== null ? avg + 's' : '—';
+}
+
+// ── IDLE ──
+function renderIdle() {
+  showState('idle');
+}
+
+// ── ROLL DECISION ──
+function rollDecision() {
+  const pool = activeFilter === 'all'
+    ? state.queue
+    : state.queue.filter(d => d.tag === activeFilter);
+
+  const source = pool.length > 0 ? pool : state.queue;
+
+  if (source.length === 0) {
+    alert('Add at least one decision to your list first!');
+    return;
+  }
+
+  // Weight toward higher avoidCount
+  const weights = source.map(d => 1 + (d.avoidCount || 0));
+  const total = weights.reduce((a, b) => a + b, 0);
+  let rand = Math.random() * total;
+  let chosen = source[source.length - 1];
+  for (let i = 0; i < source.length; i++) {
+    rand -= weights[i];
+    if (rand <= 0) { chosen = source[i]; break; }
+  }
+
+  currentDecision = chosen;
+  retryMode = false;
+  document.getElementById('whyInput').value = '';
+
+  // Show streak badge if avoided before
+  const badge = document.getElementById('streakBadge');
+  const count = chosen.avoidCount || 0;
+  if (count > 0) {
+    badge.classList.add('show');
+    const msgs = [
+      `You've timed out on this ${count} time${count > 1 ? 's' : ''}.`,
+      `${count} time${count > 1 ? 's' : ''} avoided. Decide already.`,
+      `You've been dodging this for ${count} round${count > 1 ? 's' : ''}. Stop.`
+    ];
+    document.getElementById('streakText').textContent = msgs[Math.min(count - 1, msgs.length - 1)];
+  } else {
+    badge.classList.remove('show');
+  }
+
+  showState('decision');
+  document.getElementById('decisionText').classList.add('rolling');
+  document.getElementById('decisionText').textContent = currentDecision.text;
+  document.getElementById('decisionNum').textContent = '#' + (state.archive.length + 1);
+  setTimeout(() => document.getElementById('decisionText').classList.remove('rolling'), 600);
+  startTimer();
+}
+
+function retryDecision() {
+  if (!currentDecision) { showState('idle'); return; }
+  retryMode = true;
+  document.getElementById('whyInput').value = '';
+  showState('decision');
+  document.getElementById('decisionText').textContent = currentDecision.text;
+
+  // Update streak badge on retry too
+  const count = currentDecision.avoidCount || 0;
+  const badge = document.getElementById('streakBadge');
+  if (count > 0) {
+    badge.classList.add('show');
+    document.getElementById('streakText').textContent = `You've timed out on this ${count} time${count > 1 ? 's' : ''}. Decide NOW.`;
+  }
+
+  startTimer();
+}
+
+// ── TIMER ──
+function startTimer() {
+  clearInterval(timerInterval);
+  timerSeconds = 30;
+  updateTimerUI(30);
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    updateTimerUI(timerSeconds);
+    if (timerSeconds <= 0) {
+      clearInterval(timerInterval);
+      onTimeout();
+    }
+  }, 1000);
+}
+
+function updateTimerUI(s) {
+  const circ = document.getElementById('timerCircle');
+  const num = document.getElementById('timerNumber');
+  const total = 263.9;
+  const offset = total * (1 - s / 30);
+  circ.style.strokeDashoffset = offset;
+  circ.style.stroke = s <= 10 ? 'var(--red)' : s <= 20 ? 'var(--amber)' : 'var(--ink)';
+  num.textContent = s;
+  num.className = 'timer-number' + (s <= 10 ? ' urgent' : '');
+}
+
+// ── LOCK DECISION ──
+function lockDecision(answer) {
+  clearInterval(timerInterval);
+  const secondsTaken = 30 - timerSeconds;
+  const why = document.getElementById('whyInput').value.trim();
+  const rec = saveDecision(currentDecision, answer, secondsTaken, why);
+  showLocked(rec);
+}
+
+function onTimeout() {
+  // Increment avoidCount on the queue item
+  const item = state.queue.find(d => d.id === currentDecision.id);
+  if (item) item.avoidCount = (item.avoidCount || 0) + 1;
+
+  const count = item ? item.avoidCount : 1;
+  const why = document.getElementById('whyInput').value.trim();
+  saveDecision(currentDecision, null, 30, why);
+
+  document.getElementById('timeoutQuestion').textContent = '"' + currentDecision.text + '"';
+  const avoidEl = document.getElementById('timeoutAvoidCount');
+  if (count > 1) {
+    avoidEl.textContent = `You've now avoided this decision ${count} times. The longer you wait, the worse it gets.`;
+    avoidEl.classList.add('show');
+  } else {
+    avoidEl.classList.remove('show');
+  }
+
+  showState('timeout');
+  save();
+  renderQueue();
+  renderStats();
+}
+
+function saveDecision(decision, answer, seconds, why) {
+  const rec = {
+    id: Date.now(),
+    question: decision.text,
+    answer: answer,
+    seconds: seconds,
+    why: why || null,
+    firstStep: null,
+    tag: decision.tag || null,
+    date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})
+  };
+  state.archive.push(rec);
+  if (answer === 'Yes') state.queue = state.queue.filter(d => d.id !== decision.id);
+  save();
+  renderQueue();
+  renderArchive();
+  renderStats();
+  return rec;
+}
+
+function showLocked(rec) {
+  document.getElementById('lockedQuestion').textContent = '"' + rec.question + '"';
+  document.getElementById('lockedAnswer').textContent = rec.answer;
+  document.getElementById('lockedTime').textContent = 'Decided on ' + rec.date + ' · ' + rec.seconds + 's';
+  const card = document.getElementById('lockedCard');
+  const isYes = rec.answer === 'Yes';
+  card.style.borderColor = isYes ? 'var(--green)' : 'var(--red)';
+  card.style.boxShadow = isYes ? '6px 6px 0 rgba(39,174,96,0.3)' : '6px 6px 0 rgba(192,57,43,0.3)';
+  document.getElementById('lockedAnswer').style.borderLeftColor = isYes ? 'var(--green)' : 'var(--red)';
+  document.getElementById('lockedAnswer').style.color = isYes ? 'var(--green)' : 'var(--red)';
+  const stamp = document.querySelector('.locked-stamp');
+  stamp.style.color = isYes ? 'var(--green)' : 'var(--red)';
+  stamp.textContent = isYes ? '✓ YES — LOCKED IN' : '✕ NO — STAYS IN QUEUE';
+
+  // Show first-step prompt only on Yes
+  const firstStepSection = document.getElementById('firstStepSection');
+  if (isYes) {
+    firstStepSection.classList.add('show');
+    document.getElementById('firstStepInput').value = '';
+    document.getElementById('firstStepSaved').style.display = 'none';
+    // store rec id for saving step later
+    firstStepSection.dataset.archiveId = rec.id;
+  } else {
+    firstStepSection.classList.remove('show');
+  }
+
+  showState('locked');
+}
+
+// ── SAVE FIRST STEP ──
+function saveFirstStep() {
+  const input = document.getElementById('firstStepInput');
+  const step = input.value.trim();
+  if (!step) { input.focus(); return; }
+  const id = parseInt(document.getElementById('firstStepSection').dataset.archiveId);
+  const rec = state.archive.find(a => a.id === id);
+  if (rec) {
+    rec.firstStep = step;
+    save();
+    renderArchive();
+  }
+  document.getElementById('firstStepSaved').style.display = 'block';
+  document.querySelector('.first-step-save').style.display = 'none';
+}
+
+// ── STATE SWITCHER ──
+function showState(s) {
+  document.getElementById('idleCard').style.display = s === 'idle' ? 'block' : 'none';
+  document.getElementById('decisionCard').className = 'decision-card' + (s === 'decision' ? ' show' : '');
+  document.getElementById('lockedCard').className = 'locked-card' + (s === 'locked' ? ' show' : '');
+  document.getElementById('timeoutCard').className = 'timeout-card' + (s === 'timeout' ? ' show' : '');
+}
+
+// ── HELPERS ──
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── INIT ──
+renderQueue();
+renderArchive();
+renderDeleted();
+renderStats();
+renderIdle();
+</script>
+</body>
+</html>
